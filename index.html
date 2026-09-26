@@ -3,9 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d9488">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ค้นหามิเตอร์">
 <title>ค้นหามิเตอร์ PEA</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔎</text></svg>">
 <style>
-  /* ---------- สไตล์เหมือนของเดิมทุกประการ ---------- */
+  /* ไม่พึ่ง CDN ใด ๆ ทั้งสิ้น หน้านี้จึงเปิดได้เร็วและใช้ได้แม้เครือข่ายบล็อกเว็บนอก */
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0; padding: 0; background: #f1f5f9; color: #0f172a; line-height: 1.55;
@@ -15,6 +21,7 @@
   .wrap { max-width: 620px; margin: 0 auto; padding: 14px; }
   .hide { display: none !important; }
 
+  /* ---------- ส่วนประกอบพื้นฐาน ---------- */
   .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 7px;
@@ -41,6 +48,7 @@
   .spin-lg { width: 38px; height: 38px; border-width: 4px; }
   @keyframes sp { to { transform: rotate(360deg); } }
 
+  /* ---------- หน้าเข้าสู่ระบบ ---------- */
   #loginScreen { position: fixed; inset: 0; background: #f1f5f9; display: flex; align-items: center;
                  justify-content: center; padding: 18px; z-index: 60; }
   #loginScreen .card { width: 100%; max-width: 360px; padding: 26px; margin: 0; }
@@ -50,11 +58,13 @@
   .err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px;
          font-weight: 600; border-radius: 9px; padding: 9px 11px; margin-bottom: 10px; }
 
+  /* ---------- หัวหน้าจอ ---------- */
   .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px;
             background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
   .topbar h1 { font-size: 16px; margin: 0; font-weight: 800; }
   .topbar p { margin: 2px 0 0; font-size: 12px; color: #64748b; }
 
+  /* ---------- ผลการค้นหา ---------- */
   .hint { font-size: 12.5px; color: #64748b; margin: 10px 2px 0; }
   .result {
     display: block; width: 100%; text-align: left; background: #fff; border: 1px solid #e2e8f0;
@@ -73,6 +83,7 @@
   .tag-ok   { background: #f0fdfa; color: #0f766e; border-color: #99f6e4; }
   .tag-wait { background: #fffbeb; color: #b45309; border-color: #fde68a; }
 
+  /* ---------- การ์ดรายละเอียด ---------- */
   .detail-head { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px; }
   .detail-head .pea { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
   .detail-head .who { font-size: 17px; font-weight: 700; margin-top: 4px; }
@@ -97,11 +108,14 @@
   .photo-box { margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;
                background: #f8fafc; min-height: 150px; display: flex; align-items: center;
                justify-content: center; position: relative; cursor: zoom-in; }
+  /* ภาพแนวตั้งจากมือถือสูงมาก ถ้าไม่จำกัดจะดันการ์ดยาวจนต้องเลื่อนหาข้อมูลอื่น
+     ใช้ contain เพื่อให้เห็นภาพครบทั้งใบ ไม่ตัดส่วนที่อาจมีมิเตอร์อยู่ */
   .photo-box img { width: 100%; max-height: 360px; object-fit: contain; display: block; background: #f1f5f9; }
   .photo-box .cap { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,.62);
                     color: #fff; font-size: 12px; padding: 5px 10px; }
   .muted { color: #64748b; font-size: 13.5px; text-align: center; padding: 22px 12px; }
 
+  /* ---------- ทับหน้าจอ ---------- */
   #photoModal { position: fixed; inset: 0; background: rgba(2,6,23,.94); z-index: 70;
                 display: flex; flex-direction: column; }
   #photoModal .bar { display: flex; align-items: center; justify-content: space-between;
@@ -130,7 +144,7 @@
   <div class="card">
     <div class="logo">🔎</div>
     <h1 style="font-size:17px;text-align:center;margin:0 0 4px;">ค้นหามิเตอร์ PEA</h1>
-    <p style="text-align:center;color:#64748b;font-size:13px;margin:0 0 20px;">สำหรับผู้จดหน่วย</p>
+    <p style="text-align:center;color:#64748b;font-size:13px;margin:0 0 20px;">มิเตอร์ติดตั้งใหม่ สำหรับคนจดหน่วย</p>
 
     <label class="label" for="loginCode">รหัสผู้ใช้</label>
     <input type="text" id="loginCode" inputmode="numeric" autocomplete="username" class="mono" style="margin-bottom:14px">
@@ -201,15 +215,21 @@
 </div>
 
 <script>
-  // ================= 1. พื้นฐาน และการตั้งค่า API =================
-  const API_URL = 'https://script.google.com/macros/s/AKfycbx86UcFT-NdZI1xhKt36uEOH8qkVwp8MWS3p3O8O3xAUnFAa_LzSIb6n_XyzTaQ-MMqdw/exec';
-  const SESSION_KEY = 'pea_lookup_session';   
+  // ================= 1. พื้นฐาน =================
+  // URL ของ API หลังบ้าน (Google Apps Script Web App ที่ลงท้ายด้วย /exec)
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzwhkk4j5J9nVwURrab3ExrZxfNdajI05DG4gE3ckYK_tsTtgLO87gblchm-nyr1wwN/exec';
+  const API_TIMEOUT_MS = 30000;        // คำขอทั่วไป
+  const API_TIMEOUT_PHOTO_MS = 60000;  // รูปเต็มไฟล์ใหญ่ อาจใช้เวลานานกว่า
+
+  const SESSION_KEY = 'pea_lookup_session';   // แยกจากระบบของช่างคนละคีย์
+  const DEVICE_KEY  = 'pea_lookup_device';    // ใช้นับการกรอก PIN ผิดแยกตามเครื่อง
   const MIN_QUERY_LEN = 3;
 
   let session = null;
+  let lastRes = null;       // ผลค้นหาล่าสุด เก็บไว้ให้ปุ่ม "กลับ" แสดงซ้ำได้โดยไม่ต้องค้นใหม่
   let lastResults = [];
-  let openRow = null;
-  const photoCache = {};   // row -> { thumb, full }
+  let current = null;       // งานที่เปิดการ์ดรายละเอียดอยู่
+  const photoCache = {};    // key -> { thumb, full }  (ใช้ key ไม่ใช้เลขแถว เพราะแถวเลื่อนได้)
 
   function $(id) { return document.getElementById(id); }
   function show(id) { $(id).classList.remove('hide'); }
@@ -221,22 +241,53 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // --- Wrapper หลักในการเรียก API เปลี่ยนจาก google.script.run เป็น fetch ---
+  /**
+   * เรียก API หลังบ้าน
+   * - ส่งเป็น POST + text/plain เพื่อไม่ให้เบราว์เซอร์ส่ง preflight (GAS ไม่ตอบ OPTIONS จึงจะโดน CORS block)
+   * - token / PIN อยู่ใน body เท่านั้น ไม่ใส่ใน URL
+   * - URL /exec จะ redirect ไป googleusercontent.com ก่อนเสมอ จึงต้อง redirect: 'follow'
+   */
   function callServer(fnName) {
     const args = Array.prototype.slice.call(arguments, 1);
-    
+    const timeoutMs = fnName === 'getInstallPhoto' ? API_TIMEOUT_PHOTO_MS : API_TIMEOUT_MS;
+
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return Promise.reject(new Error('ไม่มีสัญญาณอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ'));
+    }
+
+    const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, timeoutMs) : null;
+
     return fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain หลีกเลี่ยง CORS Preflight ของฝั่ง GAS
-      body: JSON.stringify({ action: fnName, args: args })
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fnName, args: args }),
+      redirect: 'follow',
+      cache: 'no-store',
+      credentials: 'omit',
+      signal: ctrl ? ctrl.signal : undefined
     })
-    .then(function(response) {
-      if (!response.ok) throw new Error('การเชื่อมต่อกับเซิร์ฟเวอร์ขัดข้อง (' + response.status + ')');
-      return response.json();
-    });
+      .then(function (res) {
+        if (!res.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับผิดปกติ (HTTP ' + res.status + ')');
+        return res.text();
+      })
+      .then(function (text) {
+        const t = String(text || '').trim();
+        // ได้ HTML กลับมาแทน JSON = deploy ตั้งค่าผิด หรือ Google ขัดข้องชั่วคราว
+        if (!t || t.charAt(0) === '<') {
+          throw new Error('เชื่อมต่อระบบหลังบ้านไม่ได้ กรุณาลองใหม่อีกครั้ง หรือแจ้งผู้ดูแลระบบ');
+        }
+        try { return JSON.parse(t); }
+        catch (e) { throw new Error('ข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง'); }
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') throw new Error('เซิร์ฟเวอร์ตอบช้าเกินไป กรุณาลองใหม่อีกครั้ง');
+        if (err && err.name === 'TypeError') throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่');
+        throw err;
+      })
+      .finally(function () { if (timer) clearTimeout(timer); });
   }
 
-  // --- ฟังก์ชันเรียก API แบบต้องมี Token ---
   function callAuth(fnName) {
     const args = Array.prototype.slice.call(arguments, 1);
     return callServer.apply(null, [fnName, session ? session.token : ''].concat(args))
@@ -254,6 +305,20 @@
   function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; } }
   function load(key) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
   function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
+
+  function deviceId() {
+    let id = load(DEVICE_KEY);
+    if (id) return id;
+    try {
+      const a = new Uint8Array(16);
+      crypto.getRandomValues(a);
+      id = Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    } catch (e) {
+      id = Date.now().toString(16) + Math.random().toString(16).slice(2);
+    }
+    store(DEVICE_KEY, id);
+    return id;
+  }
 
   function showLoading(text) { $('loadingText').textContent = text || 'กำลังทำงาน...'; show('loading'); }
   function hideLoading() { hide('loading'); }
@@ -314,7 +379,7 @@
     btn.innerHTML = '<span class="spin"></span> กำลังตรวจสอบ...';
     const restore = function () { btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; };
 
-    callServer('login', code, pin)
+    callServer('login', code, pin, deviceId())
       .then(function (res) {
         restore();
         if (!res || !res.success) {
@@ -338,7 +403,9 @@
   function doLogout() {
     const token = session ? session.token : '';
     clearSession();
+    lastRes = null;
     lastResults = [];
+    current = null;
     $('results').innerHTML = '';
     $('detail').innerHTML = '';
     $('q').value = '';
@@ -366,12 +433,13 @@
     btn.innerHTML = '<span class="spin"></span>';
     $('detail').innerHTML = '';
     $('results').innerHTML = '';
-    openRow = null;
+    current = null;
 
     callAuth('searchMeters', q)
       .then(function (res) {
         btn.disabled = false;
         btn.textContent = 'ค้นหา';
+        lastRes = res;
         lastResults = res.results || [];
 
         if (!lastResults.length) {
@@ -414,8 +482,15 @@
   function openResult(i) {
     const t = lastResults[i];
     if (!t) return;
-    $('results').innerHTML = '<button class="btn btn-ghost btn-sm" style="margin-bottom:10px" onclick="doSearch()">← กลับไปที่ผลการค้นหา</button>';
+    $('results').innerHTML = '<button class="btn btn-ghost btn-sm" style="margin-bottom:10px" onclick="backToResults()">← กลับไปที่ผลการค้นหา</button>';
     renderDetail(t);
+  }
+
+  function backToResults() {
+    if (!lastRes) return;
+    current = null;
+    $('detail').innerHTML = '';
+    renderResults(lastRes);
   }
 
   // ================= 4. การ์ดรายละเอียด =================
@@ -428,7 +503,7 @@
   }
 
   function renderDetail(t) {
-    openRow = t.row;
+    current = t;
 
     let html = '<div class="card">';
 
@@ -479,11 +554,11 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     callAuth('logView', t.peaNo).catch(function () {});
-    if (t.hasPhoto) loadThumb(t.row);
+    if (t.hasPhoto) loadThumb(t);
   }
 
   // ================= 5. รูปภาพ =================
-  function loadThumb(row) {
+  function loadThumb(t) {
     const box = $('photoBox');
     if (!box) return;
 
@@ -492,39 +567,41 @@
                       '<div class="cap">รูปติดตั้งเสร็จ — แตะเพื่อดูเต็มจอ</div>';
     };
 
-    if (photoCache[row] && photoCache[row].thumb) { paint(photoCache[row].thumb); return; }
+    const cached = photoCache[t.key];
+    if (cached && cached.thumb) { paint(cached.thumb); return; }
 
-    callAuth('getInstallPhoto', row, false)
+    callAuth('getInstallPhoto', t.row, false, t.key)
       .then(function (res) {
-        photoCache[row] = photoCache[row] || {};
-        photoCache[row].thumb = res.dataUrl;
-        if (openRow === row) paint(res.dataUrl);
+        photoCache[t.key] = photoCache[t.key] || {};
+        photoCache[t.key].thumb = res.dataUrl;
+        if (current === t) paint(res.dataUrl);
       })
       .catch(function (err) {
         if (err.message === 'SESSION_EXPIRED') return;
-        if (openRow === row) box.innerHTML = '<div class="muted">แสดงรูปไม่ได้: ' + escapeHtml(err.message) + '</div>';
+        if (current === t) box.innerHTML = '<div class="muted">แสดงรูปไม่ได้: ' + escapeHtml(err.message) + '</div>';
       });
   }
 
   function openPhoto() {
-    const row = openRow;
-    if (!row) return;
+    const t = current;
+    if (!t) return;
 
     show('photoModal');
     const img = $('photoFull');
+    const cached = photoCache[t.key];
 
-    if (photoCache[row] && photoCache[row].full) { img.src = photoCache[row].full; hide('photoSpin'); return; }
+    if (cached && cached.full) { img.src = cached.full; hide('photoSpin'); return; }
 
     // ระหว่างรอไฟล์เต็ม แสดงรูปย่อไปพลางก่อน จะได้ไม่เห็นจอดำเปล่า ๆ
-    img.src = (photoCache[row] && photoCache[row].thumb) ? photoCache[row].thumb : '';
+    img.src = (cached && cached.thumb) ? cached.thumb : '';
     show('photoSpin');
 
-    callAuth('getInstallPhoto', row, true)
+    callAuth('getInstallPhoto', t.row, true, t.key)
       .then(function (res) {
         hide('photoSpin');
-        photoCache[row] = photoCache[row] || {};
-        photoCache[row].full = res.dataUrl;
-        img.src = res.dataUrl;
+        photoCache[t.key] = photoCache[t.key] || {};
+        photoCache[t.key].full = res.dataUrl;
+        if (current === t) img.src = res.dataUrl;
       })
       .catch(function (err) {
         hide('photoSpin');
