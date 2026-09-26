@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ค้นหามิเตอร์ PEA</title>
+<style>
+  /* ไม่พึ่ง CDN ใด ๆ ทั้งสิ้น หน้านี้จึงเปิดได้เร็วและใช้ได้แม้เครือข่ายบล็อกเว็บนอก */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0; background: #f1f5f9; color: #0f172a; line-height: 1.55;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', Roboto, 'Helvetica Neue', sans-serif;
+    font-size: 15px;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 14px; }
+  .hide { display: none !important; }
+
+  /* ---------- ส่วนประกอบพื้นฐาน ---------- */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border: 0; border-radius: 10px; padding: 13px 18px; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: inherit; text-decoration: none; transition: background .15s;
+  }
+  .btn-primary { background: #0d9488; color: #fff; width: 100%; }
+  .btn-primary:active { background: #0f766e; }
+  .btn-primary:disabled { background: #99f6e4; }
+  .btn-ghost { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+  .btn-sm { padding: 8px 12px; font-size: 13px; border-radius: 8px; }
+  input[type=text], input[type=password], input[type=search] {
+    width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 13px 14px;
+    font-size: 16px; font-family: inherit; outline: none; background: #fff; color: #0f172a;
+  }
+  input:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.15); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  .spin {
+    width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.45);
+    border-top-color: #fff; border-radius: 50%; animation: sp .8s linear infinite; display: inline-block;
+  }
+  .spin-dark { border-color: #cbd5e1; border-top-color: #0d9488; }
+  .spin-lg { width: 38px; height: 38px; border-width: 4px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  /* ---------- หน้าเข้าสู่ระบบ ---------- */
+  #loginScreen { position: fixed; inset: 0; background: #f1f5f9; display: flex; align-items: center;
+                 justify-content: center; padding: 18px; z-index: 60; }
+  #loginScreen .card { width: 100%; max-width: 360px; padding: 26px; margin: 0; }
+  .logo { width: 54px; height: 54px; border-radius: 15px; background: #ccfbf1; color: #0f766e;
+          display: flex; align-items: center; justify-content: center; font-size: 27px; margin: 0 auto 12px; }
+  .label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin: 0 0 5px; }
+  .err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px;
+         font-weight: 600; border-radius: 9px; padding: 9px 11px; margin-bottom: 10px; }
+
+  /* ---------- หัวหน้าจอ ---------- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
+  .topbar h1 { font-size: 16px; margin: 0; font-weight: 800; }
+  .topbar p { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+
+  /* ---------- ผลการค้นหา ---------- */
+  .hint { font-size: 12.5px; color: #64748b; margin: 10px 2px 0; }
+  .result {
+    display: block; width: 100%; text-align: left; background: #fff; border: 1px solid #e2e8f0;
+    border-left: 4px solid #0d9488; border-radius: 12px; padding: 12px 14px; margin-bottom: 9px;
+    cursor: pointer; font-family: inherit; font-size: 15px; color: inherit;
+  }
+  .result:active { background: #f8fafc; }
+  .result .pea { font-weight: 800; font-size: 15px; }
+  .result .who { color: #334155; font-size: 14px; margin-top: 1px; }
+  .result .sub { color: #64748b; font-size: 12.5px; margin-top: 3px; }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+         border-radius: 999px; border: 1px solid; white-space: nowrap; }
+  .tag-req  { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  .tag-hit  { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+  .tag-ok   { background: #f0fdfa; color: #0f766e; border-color: #99f6e4; }
+  .tag-wait { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+
+  /* ---------- การ์ดรายละเอียด ---------- */
+  .detail-head { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px; }
+  .detail-head .pea { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+  .detail-head .who { font-size: 17px; font-weight: 700; margin-top: 4px; }
+  .detail-head .addr { color: #475569; font-size: 14px; margin-top: 3px; }
+
+  .kv { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f8fafc; font-size: 14px; }
+  .kv .k { color: #64748b; min-width: 128px; flex-shrink: 0; font-size: 13px; }
+  .kv .v { font-weight: 600; word-break: break-word; }
+  .kv .v.empty { color: #cbd5e1; font-weight: 400; }
+
+  .geo { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .geo.site { border-color: #99f6e4; background: #f0fdfa; }
+  .geo.wait { background: #f8fafc; border-style: dashed; }
+  .geo h3 { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #475569; }
+  .geo .val { font-size: 15px; font-weight: 700; }
+  .geo .meta { font-size: 12px; color: #64748b; margin-top: 2px; }
+  .geo .maplink { display: inline-flex; align-items: center; gap: 6px; margin-top: 9px;
+                  background: #0d9488; color: #fff; border-radius: 9px; padding: 9px 14px;
+                  font-size: 13.5px; font-weight: 700; text-decoration: none; }
+  .geo.req .maplink { background: #2563eb; }
+
+  .photo-box { margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;
+               background: #f8fafc; min-height: 150px; display: flex; align-items: center;
+               justify-content: center; position: relative; cursor: zoom-in; }
+  /* ภาพแนวตั้งจากมือถือสูงมาก ถ้าไม่จำกัดจะดันการ์ดยาวจนต้องเลื่อนหาข้อมูลอื่น
+     ใช้ contain เพื่อให้เห็นภาพครบทั้งใบ ไม่ตัดส่วนที่อาจมีมิเตอร์อยู่ */
+  .photo-box img { width: 100%; max-height: 360px; object-fit: contain; display: block; background: #f1f5f9; }
+  .photo-box .cap { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,.62);
+                    color: #fff; font-size: 12px; padding: 5px 10px; }
+  .muted { color: #64748b; font-size: 13.5px; text-align: center; padding: 22px 12px; }
+
+  /* ---------- ทับหน้าจอ ---------- */
+  #photoModal { position: fixed; inset: 0; background: rgba(2,6,23,.94); z-index: 70;
+                display: flex; flex-direction: column; }
+  #photoModal .bar { display: flex; align-items: center; justify-content: space-between;
+                     padding: 12px 14px; color: #fff; font-size: 14px; font-weight: 700; }
+  #photoModal .stage { flex: 1; display: flex; align-items: center; justify-content: center;
+                       padding: 8px; overflow: auto; }
+  #photoModal img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .xbtn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.14);
+          color: #fff; border: 0; font-size: 20px; cursor: pointer; line-height: 1; }
+
+  #msgBox { position: fixed; inset: 0; background: rgba(2,6,23,.5); z-index: 80;
+            display: flex; align-items: center; justify-content: center; padding: 20px; }
+  #msgBox .card { max-width: 330px; width: 100%; text-align: center; margin: 0; }
+  #msgBox h3 { margin: 0 0 6px; font-size: 16px; }
+  #msgBox p { margin: 0 0 16px; font-size: 14px; color: #475569; }
+
+  #loading { position: fixed; inset: 0; background: rgba(241,245,249,.85); z-index: 75;
+             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  #loading p { font-size: 13.5px; color: #475569; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ========== เข้าสู่ระบบ ========== -->
+<div id="loginScreen" class="hide">
+  <div class="card">
+    <div class="logo">🔎</div>
+    <h1 style="font-size:17px;text-align:center;margin:0 0 4px;">ค้นหามิเตอร์ PEA</h1>
+    <p style="text-align:center;color:#64748b;font-size:13px;margin:0 0 20px;">มิเตอร์ติดตั้งใหม่ สำหรับคนจดหน่วย</p>
+
+    <label class="label" for="loginCode">รหัสผู้ใช้</label>
+    <input type="text" id="loginCode" inputmode="numeric" autocomplete="username" class="mono" style="margin-bottom:14px">
+
+    <label class="label" for="loginPin">PIN</label>
+    <input type="password" id="loginPin" inputmode="numeric" maxlength="4" autocomplete="current-password"
+           class="mono" style="letter-spacing:.4em;margin-bottom:12px">
+
+    <p id="loginError" class="err hide"></p>
+
+    <button id="loginBtn" class="btn btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <p style="text-align:center;color:#94a3b8;font-size:11.5px;margin:16px 0 0;">ลืม PIN หรือถูกล็อก ติดต่อผู้ดูแลระบบ</p>
+  </div>
+</div>
+
+<!-- ========== หน้าหลัก ========== -->
+<div id="appScreen" class="hide">
+  <div class="wrap">
+
+    <div class="topbar">
+      <div>
+        <h1>ค้นหามิเตอร์</h1>
+        <p id="userLabel">-</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">ออกจากระบบ</button>
+    </div>
+
+    <div class="card">
+      <label class="label" for="q">พิมพ์ PEA · หมายเลขจดหน่วย · PEA.เดิม หรือชื่อลูกค้า</label>
+      <div style="display:flex;gap:8px">
+        <input type="search" id="q" enterkeyhint="search" placeholder="เช่น 6900017645 หรือ พิชญา" style="flex:1">
+        <button id="searchBtn" class="btn btn-primary" style="width:auto;flex-shrink:0" onclick="doSearch()">ค้นหา</button>
+      </div>
+      <p class="hint" id="searchHint">พิมพ์อย่างน้อย 3 ตัวอักษร ค้นบางส่วนได้</p>
+    </div>
+
+    <div id="results"></div>
+    <div id="detail"></div>
+
+  </div>
+</div>
+
+<!-- ========== ดูรูปเต็มจอ ========== -->
+<div id="photoModal" class="hide">
+  <div class="bar">
+    <span id="photoTitle">รูปติดตั้งเสร็จ</span>
+    <button class="xbtn" onclick="closePhoto()">✕</button>
+  </div>
+  <div class="stage">
+    <div id="photoSpin" class="spin spin-lg spin-dark hide"></div>
+    <img id="photoFull" alt="">
+  </div>
+</div>
+
+<!-- ========== กล่องข้อความ ========== -->
+<div id="msgBox" class="hide">
+  <div class="card">
+    <div id="msgIcon" style="font-size:34px;margin-bottom:6px"></div>
+    <h3 id="msgTitle"></h3>
+    <p id="msgDesc"></p>
+    <button class="btn btn-ghost" style="width:100%" onclick="hideMessage()">ตกลง</button>
+  </div>
+</div>
+
+<div id="loading" class="hide">
+  <div class="spin spin-lg spin-dark"></div>
+  <p id="loadingText">กำลังทำงาน...</p>
+</div>
+
+<script>
+  // ================= 1. พื้นฐาน =================
+  const IS_GAS = (typeof google !== 'undefined' && google.script && google.script.run);
+  const SESSION_KEY = 'pea_lookup_session';   // แยกจากระบบของช่างคนละคีย์
+  const DEVICE_KEY  = 'pea_lookup_device';    // ใช้นับการกรอก PIN ผิดแยกตามเครื่อง
+  const MIN_QUERY_LEN = 3;
+
+  let session = null;
+  let lastRes = null;       // ผลค้นหาล่าสุด เก็บไว้ให้ปุ่ม "กลับ" แสดงซ้ำได้โดยไม่ต้องค้นใหม่
+  let lastResults = [];
+  let current = null;       // งานที่เปิดการ์ดรายละเอียดอยู่
+  const photoCache = {};    // key -> { thumb, full }  (ใช้ key ไม่ใช้เลขแถว เพราะแถวเลื่อนได้)
+
+  function $(id) { return document.getElementById(id); }
+  function show(id) { $(id).classList.remove('hide'); }
+  function hide(id) { $(id).classList.add('hide'); }
+
+  function escapeHtml(str) {
+    return String(str === null || str === undefined ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function callServer(fnName) {
+    const args = Array.prototype.slice.call(arguments, 1);
+    return new Promise(function (resolve, reject) {
+      if (!IS_GAS) { reject(new Error('หน้านี้ยังไม่ได้เปิดผ่าน Google Apps Script')); return; }
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(function (err) { reject(new Error(err && err.message ? err.message : String(err))); })
+        [fnName].apply(null, args);
+    });
+  }
+
+  function callAuth(fnName) {
+    const args = Array.prototype.slice.call(arguments, 1);
+    return callServer.apply(null, [fnName, session ? session.token : ''].concat(args))
+      .then(function (res) {
+        if (res && res.authError) {
+          clearSession();
+          showLogin('หมดเวลาใช้งาน กรุณาเข้าสู่ระบบใหม่');
+          throw new Error('SESSION_EXPIRED');
+        }
+        if (!res || !res.success) throw new Error(res && res.message ? res.message : 'ไม่ทราบสาเหตุ');
+        return res;
+      });
+  }
+
+  function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; } }
+  function load(key) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function drop(key) { try { localStorage.removeItem(key); } catch (e) {} }
+
+  function deviceId() {
+    let id = load(DEVICE_KEY);
+    if (id) return id;
+    try {
+      const a = new Uint8Array(16);
+      crypto.getRandomValues(a);
+      id = Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    } catch (e) {
+      id = Date.now().toString(16) + Math.random().toString(16).slice(2);
+    }
+    store(DEVICE_KEY, id);
+    return id;
+  }
+
+  function showLoading(text) { $('loadingText').textContent = text || 'กำลังทำงาน...'; show('loading'); }
+  function hideLoading() { hide('loading'); }
+
+  function showMessage(title, desc, icon) {
+    $('msgTitle').textContent = title;
+    $('msgDesc').textContent = desc || '';
+    $('msgIcon').textContent = icon || '';
+    show('msgBox');
+  }
+  function hideMessage() { hide('msgBox'); }
+
+  // ================= 2. เข้าสู่ระบบ =================
+  window.onload = function () {
+    if (!IS_GAS) { showLogin('หน้านี้ยังไม่ได้เปิดผ่าน Google Apps Script จึงเข้าสู่ระบบไม่ได้'); return; }
+
+    $('loginPin').addEventListener('keyup', function (e) { if (e.key === 'Enter') doLogin(); });
+    $('q').addEventListener('keyup', function (e) { if (e.key === 'Enter') doSearch(); });
+
+    const saved = load(SESSION_KEY);
+    if (!saved || !saved.token) { showLogin(); return; }
+
+    showLoading('กำลังตรวจสอบสิทธิ์...');
+    callServer('checkSession', saved.token)
+      .then(function (res) {
+        hideLoading();
+        if (res && res.valid) {
+          session = { token: saved.token, code: res.code, name: res.name };
+          startApp();
+        } else { clearSession(); showLogin(); }
+      })
+      .catch(function () { hideLoading(); showLogin(); });
+  };
+
+  function showLogin(errorText) {
+    hide('appScreen');
+    show('loginScreen');
+    const err = $('loginError');
+    if (errorText) { err.textContent = errorText; err.classList.remove('hide'); }
+    else err.classList.add('hide');
+    $('loginPin').value = '';
+  }
+
+  function clearSession() { session = null; drop(SESSION_KEY); }
+
+  function doLogin() {
+    const code = $('loginCode').value.trim();
+    const pin  = $('loginPin').value.trim();
+    const err  = $('loginError');
+    const btn  = $('loginBtn');
+
+    if (!code || !pin) {
+      err.textContent = 'กรุณากรอกรหัสผู้ใช้และ PIN';
+      err.classList.remove('hide');
+      return;
+    }
+
+    err.classList.add('hide');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> กำลังตรวจสอบ...';
+    const restore = function () { btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; };
+
+    callServer('login', code, pin, deviceId())
+      .then(function (res) {
+        restore();
+        if (!res || !res.success) {
+          err.textContent = res ? res.message : 'เข้าสู่ระบบไม่สำเร็จ';
+          err.classList.remove('hide');
+          $('loginPin').value = '';
+          return;
+        }
+        session = { token: res.token, code: res.code, name: res.name };
+        store(SESSION_KEY, session);
+        $('loginPin').value = '';
+        startApp();
+      })
+      .catch(function (e) {
+        restore();
+        err.textContent = e.message;
+        err.classList.remove('hide');
+      });
+  }
+
+  function doLogout() {
+    const token = session ? session.token : '';
+    clearSession();
+    lastRes = null;
+    lastResults = [];
+    current = null;
+    $('results').innerHTML = '';
+    $('detail').innerHTML = '';
+    $('q').value = '';
+    showLogin();
+    if (IS_GAS && token) callServer('logout', token).catch(function () {});
+  }
+
+  function startApp() {
+    hide('loginScreen');
+    show('appScreen');
+    $('userLabel').textContent = session.name + ' (' + session.code + ')';
+    setTimeout(function () { $('q').focus(); }, 200);
+  }
+
+  // ================= 3. ค้นหา =================
+  function doSearch() {
+    const q = $('q').value.trim();
+    if (q.length < MIN_QUERY_LEN) {
+      showMessage('พิมพ์สั้นเกินไป', 'กรุณาพิมพ์อย่างน้อย ' + MIN_QUERY_LEN + ' ตัวอักษร', '⌨️');
+      return;
+    }
+
+    const btn = $('searchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>';
+    $('detail').innerHTML = '';
+    $('results').innerHTML = '';
+    current = null;
+
+    callAuth('searchMeters', q)
+      .then(function (res) {
+        btn.disabled = false;
+        btn.textContent = 'ค้นหา';
+        lastRes = res;
+        lastResults = res.results || [];
+
+        if (!lastResults.length) {
+          $('results').innerHTML =
+            '<div class="card"><div class="muted">ไม่พบข้อมูลที่ตรงกับ "' + escapeHtml(res.query) + '"<br>' +
+            'ลองพิมพ์เลขให้ครบขึ้น หรือค้นด้วยชื่อลูกค้าแทน</div></div>';
+          return;
+        }
+
+        if (lastResults.length === 1) { renderDetail(lastResults[0]); return; }
+        renderResults(res);
+      })
+      .catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = 'ค้นหา';
+        if (err.message === 'SESSION_EXPIRED') return;
+        showMessage('ค้นหาไม่สำเร็จ', err.message, '⚠️');
+      });
+  }
+
+  function renderResults(res) {
+    let html = '<p class="hint" style="margin:2px 2px 8px">พบ ' + res.total + ' รายการ' +
+               (res.truncated ? ' (แสดง ' + res.limit + ' รายการแรก กรุณาพิมพ์ให้เจาะจงขึ้น)' : '') + '</p>';
+
+    html += lastResults.map(function (t, i) {
+      return '<button class="result" onclick="openResult(' + i + ')">' +
+             '<div class="pea mono">' + escapeHtml(t.peaNo || '-') + '</div>' +
+             '<div class="who">' + escapeHtml(t.customer) + '</div>' +
+             (t.address ? '<div class="sub">' + escapeHtml(t.address) + '</div>' : '') +
+             '<div class="sub" style="margin-top:6px">' +
+               (t.hasPhoto ? '<span class="tag tag-ok">มีรูปติดตั้ง</span> ' : '<span class="tag tag-wait">ยังไม่ได้บันทึกงาน</span> ') +
+               '<span class="tag tag-hit">ตรงที่ ' + escapeHtml(t.matchedBy.join(', ')) + '</span>' +
+             '</div>' +
+           '</button>';
+    }).join('');
+
+    $('results').innerHTML = html;
+  }
+
+  function openResult(i) {
+    const t = lastResults[i];
+    if (!t) return;
+    $('results').innerHTML = '<button class="btn btn-ghost btn-sm" style="margin-bottom:10px" onclick="backToResults()">← กลับไปที่ผลการค้นหา</button>';
+    renderDetail(t);
+  }
+
+  function backToResults() {
+    if (!lastRes) return;
+    current = null;
+    $('detail').innerHTML = '';
+    renderResults(lastRes);
+  }
+
+  // ================= 4. การ์ดรายละเอียด =================
+  function mapLink(coords) { return 'https://maps.google.com/?q=' + encodeURIComponent(coords); }
+
+  function kv(label, value) {
+    const v = String(value === null || value === undefined ? '' : value).trim();
+    return '<div class="kv"><div class="k">' + escapeHtml(label) + '</div>' +
+           '<div class="v ' + (v ? '' : 'empty') + '">' + (v ? escapeHtml(v) : '-') + '</div></div>';
+  }
+
+  function renderDetail(t) {
+    current = t;
+
+    let html = '<div class="card">';
+
+    html += '<div class="detail-head">' +
+              (t.reqType ? '<span class="tag tag-req">' + escapeHtml(t.reqType) + '</span>' : '') +
+              '<div class="pea mono" style="margin-top:6px">' + escapeHtml(t.peaNo || '-') + '</div>' +
+              '<div class="who">' + escapeHtml(t.customer) + '</div>' +
+              '<div class="addr">' + escapeHtml(t.address || 'ไม่ระบุที่อยู่') + '</div>' +
+            '</div>';
+
+    html += kv('หมายเลขจดหน่วย', t.meterNo) + kv('PEA.เดิม', t.peaOld);
+
+    // พิกัดตามคำร้อง
+    html += '<div class="geo req">' +
+              '<h3>📍 พิกัดตามคำร้อง</h3>';
+    if (t.coords) {
+      html += '<div class="val mono">' + escapeHtml(t.coords) + '</div>' +
+              '<a class="maplink" target="_blank" rel="noopener" href="' + mapLink(t.coords) + '">เปิดแผนที่</a>';
+    } else {
+      html += '<div class="meta">ไม่มีพิกัดในคำร้อง</div>';
+    }
+    html += '</div>';
+
+    // พิกัดหน้างานจริง
+    if (t.siteCoords) {
+      const meta = [t.coordSource, t.coordAccuracy ? '± ' + t.coordAccuracy + ' ม.' : '']
+                     .filter(Boolean).join(' · ');
+      html += '<div class="geo site">' +
+                '<h3>🎯 พิกัดหน้างานจริง</h3>' +
+                '<div class="val mono">' + escapeHtml(t.siteCoords) + '</div>' +
+                (meta ? '<div class="meta">' + escapeHtml(meta) + '</div>' : '') +
+                '<a class="maplink" target="_blank" rel="noopener" href="' + mapLink(t.siteCoords) + '">เปิดแผนที่</a>' +
+              '</div>';
+    } else {
+      html += '<div class="geo wait"><h3>🎯 พิกัดหน้างานจริง</h3>' +
+              '<div class="meta">ช่างยังไม่ได้บันทึกงานนี้ — ใช้พิกัดตามคำร้องไปก่อน</div></div>';
+    }
+
+    // รูปติดตั้งเสร็จ
+    if (t.hasPhoto) {
+      html += '<div class="photo-box" id="photoBox" onclick="openPhoto()">' +
+                '<div class="spin spin-lg spin-dark" id="thumbSpin"></div>' +
+              '</div>';
+    }
+
+    html += '</div>';
+    $('detail').innerHTML = html;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    callAuth('logView', t.peaNo).catch(function () {});
+    if (t.hasPhoto) loadThumb(t);
+  }
+
+  // ================= 5. รูปภาพ =================
+  function loadThumb(t) {
+    const box = $('photoBox');
+    if (!box) return;
+
+    const paint = function (src) {
+      box.innerHTML = '<img src="' + src + '" alt="รูปติดตั้งเสร็จ">' +
+                      '<div class="cap">รูปติดตั้งเสร็จ — แตะเพื่อดูเต็มจอ</div>';
+    };
+
+    const cached = photoCache[t.key];
+    if (cached && cached.thumb) { paint(cached.thumb); return; }
+
+    callAuth('getInstallPhoto', t.row, false, t.key)
+      .then(function (res) {
+        photoCache[t.key] = photoCache[t.key] || {};
+        photoCache[t.key].thumb = res.dataUrl;
+        if (current === t) paint(res.dataUrl);
+      })
+      .catch(function (err) {
+        if (err.message === 'SESSION_EXPIRED') return;
+        if (current === t) box.innerHTML = '<div class="muted">แสดงรูปไม่ได้: ' + escapeHtml(err.message) + '</div>';
+      });
+  }
+
+  function openPhoto() {
+    const t = current;
+    if (!t) return;
+
+    show('photoModal');
+    const img = $('photoFull');
+    const cached = photoCache[t.key];
+
+    if (cached && cached.full) { img.src = cached.full; hide('photoSpin'); return; }
+
+    // ระหว่างรอไฟล์เต็ม แสดงรูปย่อไปพลางก่อน จะได้ไม่เห็นจอดำเปล่า ๆ
+    img.src = (cached && cached.thumb) ? cached.thumb : '';
+    show('photoSpin');
+
+    callAuth('getInstallPhoto', t.row, true, t.key)
+      .then(function (res) {
+        hide('photoSpin');
+        photoCache[t.key] = photoCache[t.key] || {};
+        photoCache[t.key].full = res.dataUrl;
+        if (current === t) img.src = res.dataUrl;
+      })
+      .catch(function (err) {
+        hide('photoSpin');
+        if (err.message === 'SESSION_EXPIRED') { closePhoto(); return; }
+        closePhoto();
+        showMessage('เปิดรูปไม่ได้', err.message, '🖼️');
+      });
+  }
+
+  function closePhoto() { hide('photoModal'); }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('photoModal').classList.contains('hide')) closePhoto();
+  });
+</script>
+</body>
+</html>
